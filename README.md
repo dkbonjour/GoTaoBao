@@ -75,3 +75,8 @@ $ ./GoTaoBao_linux_amd64
 
 支付宝
 ![支付宝](https://raw.githubusercontent.com/hunterhug/hunterhug.github.io/master/static/jpg/ali.png)
+
+
+# License
+
+啥啥版权都没有，随便用！！！
