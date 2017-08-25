@@ -10,10 +10,12 @@ import (
 	"github.com/PuerkitoBio/goquery"
 	"github.com/hunterhug/GoSpider/query"
 	"github.com/hunterhug/GoSpider/util"
+	"path/filepath"
 	"regexp"
 	"strings"
 )
 
+// 详情页主图
 func DownloadPicMain() {
 	for {
 		fmt.Println(`
@@ -42,7 +44,7 @@ func downlod(urlmany string) {
 	if len(temp) >= 2 && temp[1] != "" {
 		filename = util.ValidFileName(temp[1])
 	}
-	dir := "./图片/" + filename
+	dir := filepath.Join(".", "图片", filename)
 	util.MakeDir(dir)
 	爬虫.Url = url
 	urlhost := strings.Split(url, "//")
@@ -98,8 +100,8 @@ func downlod(urlmany string) {
 						if e == nil {
 							fmt.Println("成功保存在" + dir + "/" + filename)
 						}
-						util.Sleep(1)
-						fmt.Println("暂停1秒")
+						//util.Sleep(1)
+						//fmt.Println("暂停1秒")
 					}
 				}
 			})

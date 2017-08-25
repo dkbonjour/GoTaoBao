@@ -9,10 +9,9 @@ import (
 	"fmt"
 	"github.com/hunterhug/GoSpider/spider"
 	"github.com/hunterhug/GoSpider/util"
-	//"regexp"
-	"os"
 	"path/filepath"
 	"regexp"
+	"strings"
 )
 
 // 每页11列 44个商品 // 不用 ajax方式
@@ -103,6 +102,28 @@ func Search(url string) ([]byte, error) {
 	return 爬虫.Get()
 }
 
+type Items struct {
+	Items ItemList `json:"modes"`
+}
+type ItemList struct {
+	Data ItemData `json:"data"`
+}
+
+// core
+type ItemData struct {
+	Auctions []ItemObject `json:"auctions"`
+}
+
+type ItemObject struct {
+	IsTmall      bool   `json:"isTmall,omitempty"` // 是否天猫
+	CommentCount int    `json:"comment_count"`     // 评论数
+	CommentUrl   string `json:"comment_url"`
+	DetailUrl    string `json:"detail_url"`
+	ItemLoc      string `json:"item_loc"` // 发货地
+	Nick         string `json:"nick"`     //  店铺名字
+
+}
+
 func ParseSeach(data []byte) []byte {
 	parsereg := "g_page_config = ({.*})"
 	r, err := regexp.Compile(parsereg)
@@ -114,41 +135,58 @@ func ParseSeach(data []byte) []byte {
 			return bb[0][1]
 		}
 	}
-	return []byte("empty")
+	return []byte("")
 }
 
 func SearchMain() {
-	fmt.Println(`
+	for {
+		fmt.Println(`
 	-------------------------------
 	欢迎使用强大的搜索框小工具
 	你只需安装提示进行即可！
 	联系QQ：459527502
 	----------------------------------
 	`)
-	keyword := util.Input("请输入关键字:", "")
-	types := 请问搜索如何排序()
+		keyword := util.Input("请输入关键字:", "")
+		types := 请问搜索如何排序()
+		tmall := false
+		if strings.ToLower(util.Input("是否只搜索天猫商品(Y/y),默认N", "n")) == "y" {
+			tmall = true
+		}
 
-	pagestemp := util.Input("你要抓几页(1-100):", "1")
-	pages, err := util.SI(pagestemp)
-	if err != nil {
-		fmt.Println("输入页数有问题")
-		os.Exit(1)
-	}
-	if pages > 100 || pages < 1 {
-		fmt.Printf("你选择的页数有问题：%d\n", pages)
-		pages = 1
-	}
-	for page := 1; page <= pages; page++ {
-		url := SearchPrepare(keyword, page, types)
-		data, err := Search(url)
+		pagestemp := util.Input("你要抓几页(1-100):", "1")
+		pages, err := util.SI(pagestemp)
 		if err != nil {
-			fmt.Printf("抓取第%d页 失败：%s\n", page, err.Error())
-		} else {
-			fmt.Printf("抓取第%d页\n", page)
-			filename := filepath.Join(util.CurDir(), "data", "search"+util.IS(page)+".html")
-			util.MakeDirByFile(filename)
-			e := util.SaveToFile(filename, data)
-			fmt.Printf("%#v", e)
+			fmt.Println("输入页数有问题")
+			break
+		}
+		if pages > 100 || pages < 1 {
+			fmt.Printf("你选择的页数有问题：%d\n", pages)
+			break
+		}
+		url := ""
+		for page := 1; page <= pages; page++ {
+			if tmall {
+				url = SearchPrepareTmall(keyword, page, types)
+			}
+			url = SearchPrepare(keyword, page, types)
+			data, err := Search(url)
+			if err != nil {
+				fmt.Printf("抓取第%d页 失败：%s\n", page, err.Error())
+			} else {
+				fmt.Printf("抓取第%d页\n", page)
+				filename := filepath.Join(".", "原始数据", util.ValidFileName(keyword), "search"+util.IS(page)+".html")
+				util.MakeDirByFile(filename)
+				e := util.SaveToFile(filename, data)
+				if e != nil {
+					fmt.Printf("保存数据在:%s 失败:%s\n", filename, e.Error())
+					continue
+				}
+				fmt.Printf("保存数据在:%s 成功\n", filename)
+			}
+		}
+		if cancle() == "y" {
+			break
 		}
 	}
 

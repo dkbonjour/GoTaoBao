@@ -11,7 +11,7 @@ import (
 )
 
 func cancle() string {
-	return strings.ToLower(util.Input("是否退出该功能: (Y/y)", "n"))
+	return strings.ToLower(util.Input("是否退出该功能: (Y/y),默认N", "n"))
 }
 
 func TripAll(a string)string{

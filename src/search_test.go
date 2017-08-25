@@ -7,8 +7,9 @@ package src
 
 import (
 	"fmt"
-	"github.com/go_tool/util"
+	"github.com/hunterhug/GoSpider/util"
 	"path/filepath"
+	"strings"
 	"testing"
 )
 
@@ -38,7 +39,7 @@ func TestSearch(t *testing.T) {
 	if err != nil {
 		fmt.Println(err.Error())
 	} else {
-		filename := filepath.Join(util.CurDir(), "..", "data", "search.html")
+		filename := filepath.Join(util.CurDir(), "..", "原始数据", "search.html")
 		util.MakeDirByFile(filename)
 		e := util.SaveToFile(filename, data)
 		fmt.Printf("%#v\n", e)
@@ -46,12 +47,24 @@ func TestSearch(t *testing.T) {
 }
 
 func TestParseSeach(t *testing.T) {
-	filename := filepath.Join(util.CurDir(), "..", "data", "search1.html")
-	data, err := util.ReadfromFile(filename)
+	file := filepath.Join(util.CurDir(), "..", "原始数据", "mac")
+	filejson := filepath.Join(util.CurDir(), "..", "原始数据", "macjson")
+	util.MakeDir(filejson)
+	files, err := util.ListDirOnlyName(file, "html")
 	if err != nil {
 		fmt.Println(err.Error())
-	} else {
-		xx := ParseSeach(data)
-		fmt.Println(string(xx))
+		return
+	}
+	for _, filename := range files {
+		data, err := util.ReadfromFile(file + "/" + filename)
+		if err != nil {
+			fmt.Println(err.Error())
+		} else {
+			xx, _ := util.JsonBack(ParseSeach(data))
+			fmt.Println(string(xx))
+			nowjson := filejson + "/" + strings.Replace(filename, "html", "json", -1)
+			fmt.Println(nowjson)
+			util.SaveToFile(nowjson, xx)
+		}
 	}
 }
