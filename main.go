@@ -9,35 +9,55 @@ import (
 	"fmt"
 	"github.com/hunterhug/GoSpider/util"
 	"github.com/hunterhug/GoTaoBao/src"
-	"os"
-	"path/filepath"
 )
 
 func main() {
-	keyword := util.Input("请输入关键字:", "")
-	types := src.Ask()
+	fmt.Println(`
+	---------------------------------------------
+	|	亲爱的朋友，你好！
+	|	欢迎使用皮卡秋秋制作的小工具
+	|	友好超乎你想象！
+	|	如果觉得好，给我一个star！
+	|	https://github.com/hunterhug/GoTaoBao
+	|	QQ：459527502
+	---------------------------------------------
+	`)
 
-	pagestemp := util.Input("你要抓几页(1-100):", "1")
-	pages, err := util.SI(pagestemp)
-	if err != nil {
-		fmt.Println("输入页数有问题")
-		os.Exit(1)
-	}
-	if pages > 100 || pages < 1 {
-		fmt.Printf("你选择的页数有问题：%d\n", pages)
-		pages = 1
-	}
-	for page := 1; page <= pages; page++ {
-		url := src.SearchPrepare(keyword, page, types)
-		data, err := src.Search(url)
-		if err != nil {
-			fmt.Printf("抓取第%d页 失败：%s\n", page, err.Error())
-		} else {
-			fmt.Printf("抓取第%d页\n", page)
-			filename := filepath.Join(util.CurDir(), "data", "search"+util.IS(page)+".html")
-			util.MakeDirByFile(filename)
-			e := util.SaveToFile(filename, data)
-			fmt.Printf("%#v", e)
+	for {
+		fmt.Println(`
+	-------温柔的提示框---------
+	|天猫淘宝搜索框小工具: 请按 1 |
+	|天猫淘宝啥图片小工具: 请按 2 |
+	|更多待续更多待续更多: 请按 x |
+	--------------------------
+		`)
+		choice := util.Input("* 请你输入你要使用的功能:", "0")
+		switch choice {
+		case "1":
+			src.SearchMain()
+		case "2":
+			src.DownloadPicMain()
+		case "0":
+			hello()
+		default:
+			hello()
+
 		}
 	}
+}
+
+func hello() {
+	fmt.Println(`
+	--
+	- - -
+	-
+	--- -- - -------------
+	---
+	----------输入错误----- - - -- - -
+	-----  -
+	-
+	-  --   - -- - --
+	-  - -囧 -------
+	   - - --    ---
+	`)
 }
