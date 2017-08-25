@@ -6,9 +6,12 @@
 package src
 
 import (
+	"encoding/json"
 	"fmt"
 	"github.com/hunterhug/GoSpider/spider"
 	"github.com/hunterhug/GoSpider/util"
+	"github.com/hunterhug/GoSpider/util/open"
+	"github.com/hunterhug/GoSpider/util/xid"
 	"path/filepath"
 	"regexp"
 	"strings"
@@ -34,7 +37,7 @@ var (
 	爬虫   *spider.Spider
 	搜索链接 = "https://s.taobao.com/search?q=%s&s=%d&sort=%s"
 	搜索排序 = map[int]string{
-		1: "综合排序",
+		1: "综合排序(MayBe千人千面)",
 		2: "人气从高到低",
 		3: "销量从高到低",
 		4: "信用从高到低",
@@ -94,7 +97,7 @@ func SearchPrepare(keyword string, page int, order int) string {
 // 只搜索天猫
 func SearchPrepareTmall(keyword string, page int, order int) string {
 	url := SearchPrepare(keyword, page, order)
-	return url + "&filter_tianmao=tmall"
+	return url + "&filter_tianmao=tmall&tab=mall"
 }
 
 func Search(url string) ([]byte, error) {
@@ -102,8 +105,12 @@ func Search(url string) ([]byte, error) {
 	return 爬虫.Get()
 }
 
+type Mods struct {
+	ModData Items `json:"mods"`
+	//PageName string `json:"pageName"`
+}
 type Items struct {
-	Items ItemList `json:"modes"`
+	Items ItemList `json:"itemlist"`
 }
 type ItemList struct {
 	Data ItemData `json:"data"`
@@ -114,17 +121,30 @@ type ItemData struct {
 	Auctions []ItemObject `json:"auctions"`
 }
 
+// 我的商品(不区分广告，某些商品做了广告会被置顶！)
 type ItemObject struct {
-	IsTmall      bool   `json:"isTmall,omitempty"` // 是否天猫
-	CommentCount int    `json:"comment_count"`     // 评论数
-	CommentUrl   string `json:"comment_url"`
-	DetailUrl    string `json:"detail_url"`
-	ItemLoc      string `json:"item_loc"` // 发货地
-	Nick         string `json:"nick"`     //  店铺名字
+	IsTmallObject IsTmall `json:"shopcard"`      // 是否天猫
+	CommentCount  string  `json:"comment_count"` // 评论数
+	Nid           string  `json:"nid"`           // 商品ID
+	//CommentUrl   string `json:"comment_url"`
+	//DetailUrl    string `json:"detail_url"`
+	ItemLoc  string `json:"item_loc"`  // 发货地
+	Nick     string `json:"nick"`      //  店铺名字
+	PicUrl   string `json:"pic_url"`   // 商品图片
+	RawTitle string `json:"raw_title"` // 商品标题
+	//ShopLink     string `json:"shopLink"`   // 店铺URL
+	UserId    string `json:"user_id"`    // 卖家ID
+	ViewFee   string `json:"view_fee"`   // 小费？
+	ViewPrice string `json:"view_price"` // 价格
+	ViewSales string `json:"view_sales"` // 付款人数
 
 }
 
-func ParseSeach(data []byte) []byte {
+type IsTmall struct {
+	Yes bool `json:"isTmall"`
+}
+
+func ParseSearchPrepare(data []byte) []byte {
 	parsereg := "g_page_config = ({.*})"
 	r, err := regexp.Compile(parsereg)
 	if err != nil {
@@ -138,8 +158,20 @@ func ParseSeach(data []byte) []byte {
 	return []byte("")
 }
 
+// 解析到结构体
+func ParseSearch(data []byte) Mods {
+	items := Mods{}
+	err := json.Unmarshal(data, &items)
+	if err != nil {
+		fmt.Println(err.Error())
+	}
+	return items
+}
+
 func SearchMain() {
 	for {
+		csv := []ItemObject{}
+
 		fmt.Println(`
 	-------------------------------
 	欢迎使用强大的搜索框小工具
@@ -147,10 +179,11 @@ func SearchMain() {
 	联系QQ：459527502
 	----------------------------------
 	`)
-		keyword := util.Input("请输入关键字:", "")
+		keyword := util.Input("请输入关键字(请使用+代替空格！):", "")
+		keyword = strings.Replace(keyword, " ", "+", -1)
 		types := 请问搜索如何排序()
 		tmall := false
-		if strings.ToLower(util.Input("是否只搜索天猫商品(Y/y),默认N", "n")) == "y" {
+		if strings.Contains(strings.ToLower(util.Input("是否只搜索天猫商品(Y/y),默认N", "n")), "y") {
 			tmall = true
 		}
 
@@ -168,26 +201,68 @@ func SearchMain() {
 		for page := 1; page <= pages; page++ {
 			if tmall {
 				url = SearchPrepareTmall(keyword, page, types)
+			} else {
+				url = SearchPrepare(keyword, page, types)
 			}
-			url = SearchPrepare(keyword, page, types)
+			fmt.Println("搜索:" + url)
 			data, err := Search(url)
 			if err != nil {
 				fmt.Printf("抓取第%d页 失败：%s\n", page, err.Error())
 			} else {
 				fmt.Printf("抓取第%d页\n", page)
-				filename := filepath.Join(".", "原始数据", util.ValidFileName(keyword), "search"+util.IS(page)+".html")
-				util.MakeDirByFile(filename)
-				e := util.SaveToFile(filename, data)
-				if e != nil {
-					fmt.Printf("保存数据在:%s 失败:%s\n", filename, e.Error())
+				/*	filename := filepath.Join(".", "原始数据", util.ValidFileName(keyword), "search"+util.IS(page)+".html")
+					util.MakeDirByFile(filename)
+					e := util.SaveToFile(filename, data)
+					if e != nil {
+						fmt.Printf("保存数据在:%s 失败:%s\n", filename, e.Error())
+						continue
+					}
+					fmt.Printf("保存数据在:%s 成功\n", filename)*/
+				xx := ParseSearchPrepare(data)
+				if string(xx) == "" {
+					fmt.Println("这页数据为空...")
 					continue
 				}
-				fmt.Printf("保存数据在:%s 成功\n", filename)
+				a := ParseSearch(xx)
+				if len(a.ModData.Items.Data.Auctions) > 0 {
+					for _, v := range a.ModData.Items.Data.Auctions {
+						csv = append(csv, v)
+						//fmt.Printf("%#v\n", v)
+					}
+				}
 			}
 		}
+
+		/**************************/
+		id := xid.New().String()
+		fileonly := util.TodayString(5) + "*" + id
+		rootdir := filepath.Join(".", "搜索结果", util.ValidFileName(keyword))
+		util.MakeDir(rootdir)
+		tempdata := "排序,商品标题,店铺名,发货地址,评论数,是否天猫,小费,价格,销量,用户ID,店铺URL,商品ID,商品详情URL,商品评论URL图片地址\n"
+
+		for k, v := range csv {
+			tempdata = tempdata + fmt.Sprintf("%v,%s,%s,%s,", k+1, CD(v.RawTitle), v.Nick, v.ItemLoc)
+			tempdata = tempdata + fmt.Sprintf("%s,%v,%s,%s,%s,", v.CommentCount, v.IsTmallObject.Yes, v.ViewFee, v.ViewPrice, v.ViewSales)
+			s1 := "http://store.taobao.com/shop/view_shop.htm?user_number_id=" + v.UserId
+			s2 := "http://detail.tmall.com/item.htm?id=" + v.Nid
+			s3 := s2 + "&on_comment=1"
+			tempdata = tempdata + fmt.Sprintf("%s,%s,%s,%s,%s,%s\n", v.UserId, s1, v.Nid, s2, s3, "http:"+v.PicUrl)
+		}
+
+		filekeep := rootdir + "/" + fileonly + ".csv"
+		util.SaveToFile(filekeep, []byte(tempdata))
+		fmt.Println("保存成功，请打开:" + filekeep)
+		if strings.Contains(strings.ToLower(util.Input("是否打开文件(Y/y)", "n")), "y") {
+			open.Start(filekeep)
+		}
+		/*************************/
 		if cancle() == "y" {
 			break
 		}
 	}
 
+}
+
+func CD(a string) string {
+	return TripAll(strings.Replace(a, ",", "*", -1))
 }

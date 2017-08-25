@@ -9,7 +9,6 @@ import (
 	"fmt"
 	"github.com/hunterhug/GoSpider/util"
 	"path/filepath"
-	"strings"
 	"testing"
 )
 
@@ -47,8 +46,8 @@ func TestSearch(t *testing.T) {
 }
 
 func TestParseSeach(t *testing.T) {
-	file := filepath.Join(util.CurDir(), "..", "原始数据", "mac")
-	filejson := filepath.Join(util.CurDir(), "..", "原始数据", "macjson")
+	file := filepath.Join(util.CurDir(), "..", "原始数据", "鸡腿")
+	filejson := filepath.Join(util.CurDir(), "..", "原始数据", "鸡腿json")
 	util.MakeDir(filejson)
 	files, err := util.ListDirOnlyName(file, "html")
 	if err != nil {
@@ -60,11 +59,21 @@ func TestParseSeach(t *testing.T) {
 		if err != nil {
 			fmt.Println(err.Error())
 		} else {
-			xx, _ := util.JsonBack(ParseSeach(data))
+			xx := ParseSearchPrepare(data)
+			if string(xx) == "" {
+				fmt.Println("空")
+				continue
+			}
 			fmt.Println(string(xx))
-			nowjson := filejson + "/" + strings.Replace(filename, "html", "json", -1)
-			fmt.Println(nowjson)
-			util.SaveToFile(nowjson, xx)
+			a := ParseSearch(xx)
+			if len(a.ModData.Items.Data.Auctions) > 0 {
+				for _, v := range a.ModData.Items.Data.Auctions {
+					fmt.Printf("%#v\n", v)
+				}
+			}
+			/*	nowjson := filejson + "/" + strings.Replace(filename, "html", "json", -1)
+				fmt.Println(nowjson)
+				util.SaveToFile(nowjson, xx)*/
 		}
 	}
 }
