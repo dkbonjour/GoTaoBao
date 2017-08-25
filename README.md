@@ -34,36 +34,11 @@ $ ./GoTaoBao_linux_amd64
 * 请你输入你要使用的功能:
 ```
 
-### 目录
-
-```
-tree -L 2
-├── build.sh
-├── data
-├── doc
-│   ├── doc.png
-│   └── img.png
-├── GoTaoBao_linux_386
-├── GoTaoBao_linux_amd64
-├── GoTaoBao_windows_386.exe
-├── GoTaoBao_windows_amd64.exe
-├── main.go
-├── README.md
-├── src
-│   ├── downloadpic.go
-│   ├── search.go
-│   ├── search_test.go
-│   └── util.go
-└── 图片
-    ├── taobao
-    └── 默认保存
-```
-
 ## 可以做的功能
 
 列表页可做：
 
-1. 搜索框列表 Doing
+1. 搜索框列表 Done
 2. 店铺所有宝贝列表
 
 详情页可做：
