@@ -28,6 +28,7 @@ func main() {
 	-------温柔的提示框---------
 	|天猫淘宝搜索框小工具: 请按 1 |
 	|天猫淘宝啥图片小工具: 请按 2 |
+	|天猫淘主图视频小工具: 请按 3 |
 	|更多待续更多待续更多: 请按 x |
 	--------------------------
 		`)
@@ -37,6 +38,8 @@ func main() {
 			src.SearchMain()
 		case "2":
 			src.DownloadPicMain()
+		case "3":
+			src.DownloadVideoMain()
 		case "0":
 			hello()
 		default:

@@ -233,6 +233,10 @@ func SearchMain() {
 			}
 		}
 
+		if len(csv) == 0 {
+			fmt.Println("啥都没抓到")
+			continue
+		}
 		/**************************/
 		id := xid.New().String()
 		fileonly := util.TodayString(5) + "*" + id

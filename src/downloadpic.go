@@ -25,7 +25,7 @@ func DownloadPicMain() {
 	联系QQ：459527502
 	----------------------------------
 	`)
-		fmt.Println("请输入网址链接*保存目录")
+		fmt.Println("请输入天猫淘宝链接*保存目录")
 		fmt.Println("如：https://item.taobao.com/item.htm?id=40066362090*taobao")
 		fmt.Println("------------以上详情页会保存在“图片/taobao”文件夹下--------------")
 		url := util.Input("请输入：", "")
