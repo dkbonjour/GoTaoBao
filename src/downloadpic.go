@@ -46,7 +46,7 @@ func downlod(urlmany string) {
 	}
 	dir := filepath.Join(".", "图片", filename)
 	util.MakeDir(dir)
-	爬虫.Url = url
+	爬虫.SetUrl(url)
 	urlhost := strings.Split(url, "//")
 	if len(urlhost) != 2 {
 		fmt.Println("网站错误：开头必须为http://或https://")
@@ -87,9 +87,9 @@ func downlod(urlmany string) {
 						fmt.Println("文件存在：" + dir + "/" + filename)
 					} else {
 						fmt.Println("下载:" + temp)
-						爬虫.Url = temp
+						爬虫.SetUrl(temp)
 						if strings.HasPrefix(temp, "//") {
-							爬虫.Url = "http:" + temp
+							爬虫.SetUrl("http:" + temp)
 						}
 						imgsrc, e := 爬虫.Get()
 						if e != nil {

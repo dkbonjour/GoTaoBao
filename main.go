@@ -7,11 +7,13 @@ package main
 
 import (
 	"fmt"
+	//"github.com/hunterhug/GoSpider/spider"
 	"github.com/hunterhug/GoSpider/util"
 	"github.com/hunterhug/GoTaoBao/src"
 )
 
 func main() {
+	//spider.SetLogLevel("debug")
 	fmt.Println(`
 	---------------------------------------------
 	|	亲爱的朋友，你好！
